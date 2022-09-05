@@ -7,7 +7,6 @@ import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib import style
 import pandas as pd
-import seaborn
 from packaging.requirements import Requirement
 from collections import defaultdict
 from tqdm import tqdm
@@ -17,10 +16,10 @@ allextra = 24798
 if __name__ == '__main__':
     myclient = pymongo.MongoClient("mongodb://localhost:27017/")
     mydb = myclient["pypi"]
-    package = mydb["extra2017"]
-    optional_features = []
-    extra_dependency = []
-    every_option_of_extra = []
+    package = mydb["package"]
+    optional_features = np.zeros(1000)
+    extra_dependency = np.zeros(1000)
+    every_option_of_extra = np.zeros(1000)
     num = 0
     for x in tqdm(package.find()):
         num = num + 1
@@ -35,22 +34,24 @@ if __name__ == '__main__':
                 one_extra_dependency.add(info.name)
                 one_optional_features.add(func[len(func)-1])
                 extra[func[len(func)-1]].add(info.name)
-        if len(one_optional_features) != 0:
-            optional_features.append(len(one_optional_features))
-        if len(one_extra_dependency) != 0:
-            extra_dependency.append(len(one_extra_dependency))
+        extra_dependency[len(one_extra_dependency)] = extra_dependency[len(one_extra_dependency)] + 1
+        optional_features[len(one_optional_features)] = optional_features[len(one_optional_features)] + 1
         for key,value in extra.items():
-            every_option_of_extra.append(len(value))
+            every_option_of_extra[len(value)] = every_option_of_extra[len(value)] + 1
         extra.clear()
         one_optional_features.clear()
         one_extra_dependency.clear()
 
-    pic1 = seaborn.boxenplot(x=optional_features)
-    pic1.set_title("optional_features")
-    plt.show()
-    pic2 = seaborn.boxenplot(x=extra_dependency)
-    pic2.set_title("extra_dependency")
-    plt.show()
-    pic3 = seaborn.boxenplot(x=every_option_of_extra)
-    pic3.set_title("每个option功能需要几个extra依赖")
-    plt.show()
+    f = xlwt.Workbook('encoding = utf-8')  # 设置工作簿编码
+    sheet1 = f.add_sheet('sheet1', cell_overwrite_ok=True)  # 创建sheet工作表
+    for i in range(len(optional_features)):
+        sheet1.write(i, 0, optional_features[i])  # 写入数据参数对应 行, 列, 值
+    for i in range(len(extra_dependency)):
+        sheet1.write(i,1, extra_dependency[i])  # 写入数据参数对应 行, 列, 值
+    for i in range(len(every_option_of_extra)):
+        sheet1.write(i,2, every_option_of_extra[i])  # 写入数据参数对应 行, 列, 值
+    f.save('analyze.xls')  # 保存.xls到当前工作目录
+    print("hh")
+
+
+
