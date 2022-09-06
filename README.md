@@ -24,8 +24,8 @@ Extras union in the dependencies they define with the dependencies of the distri
 ## Aim
 
 ### RQ1: How prevalent do packages use extras?
-1. The annual trend of distribution and packages with *extra specification*.
-2. The annual trend of distribution and packages with *extra adoption*. 
+1. The annual trend of packages with *extra specification*.
+2. The annual trend of packages with *extra adoption*. 
 3. the number of dependency specifications for each extra
 
 ### RQ2: What kinds of packages sepcify extras?
