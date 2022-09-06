@@ -18,9 +18,10 @@ requests[security]
 ```
 Extras union in the dependencies they define with the dependencies of the distribution they are attached to. The example above would result in requests being installed, and requests own dependencies, and also any dependencies that are listed in the “security” extra of requests. If multiple extras are listed, all the dependencies are unioned together.   
 
-## Aim
+**What is the advantage of extras? Why extras are proposed? What problems do extras aim to solve?**
 
-We aim to investigate extra from its prevalence, package cha
+
+## Aim
 
 ### RQ1: How prevalent do packages use extras?
 1. The annual trend of distribution and packages with *extra specification*.
@@ -28,14 +29,35 @@ We aim to investigate extra from its prevalence, package cha
 3. the number of dependency specifications for each extra
 
 ### RQ2: What kinds of packages sepcify extras?
-1. the number of dependency specifications: specified vs. non-specified
-2. popularity
-3. dependency size
+1. the number of dependency specifications: specified vs. non-specified   
+Hypothesis: packages with more dependency specifications are more likely to specify extras
 
+2. dependency size   
+Hypothesis: packages with more large dependencys are more likely to specify extras
+
+3. dependency-file relationships   
+Hypothesis: packages with less coupled dependency-file relationships are more likely to specify extras   
+dependency-file relationships: extra dependencies are only used in limited files. 
+
+4. Any other possible factors
+
+5. We may fit a logestic regression model on these factor? 
+
+### RQ3: What kinds of extras do packages specify?
+Categorize extras accoding to their names, for example, development extras, alternative backends, 
 
 ### RQ3: Why do packages specify extras?
 
-### RQ4: Why don't packages adopt extras?
+Mining packages' code repositories or email survey
 
+### RQ4: What problems do developers face when using extras?
+
+Analyzing issues in Python projects that mentioned "extras". Issues can be related to specification and adoption. 
+
+
+## Method
+
+### Data Collection
+We need to filter some package, since some package are rarely used by others.
 
 https://setuptools.pypa.io/en/latest/userguide/dependency_management.html#optional-dependencies
