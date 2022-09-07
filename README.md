@@ -1,5 +1,7 @@
 # A first look at extras in PyPI ecosystem
 
+Reusing third-party packages has long been a common practice in software development. However, too many dependencies may lead to various problems, e.g., dependency conflicts, security issues, and large installation size. To help developers better manage dependencies, Python provides an `extra` mechanism to customize dependencies required for installation. 
+
 ## What is extras
 
 From [PEP 508](https://peps.python.org/pep-0508/), *"A dependency specification always specifies a distribution name. It may include extras, which expand the dependencies of the named distribution to enable optional features."*
@@ -18,7 +20,6 @@ requests[security]
 ```
 Extras union in the dependencies they define with the dependencies of the distribution they are attached to. The example above would result in requests being installed, and requests own dependencies, and also any dependencies that are listed in the “security” extra of requests. If multiple extras are listed, all the dependencies are unioned together.   
 
-**What is the advantage of extras? Why extras are proposed? What problems do extras aim to solve?**
 
 
 ## Aim
@@ -44,13 +45,13 @@ dependency-file relationships: extra dependencies are only used in limited files
 5. We may fit a logestic regression model on these factor? 
 
 ### RQ3: What kinds of extras do packages specify?
-Categorize extras accoding to their names, for example, development extras, alternative backends, 
+Categorize extras accoding to their names, for example, development extras, alternative backends. 
 
-### RQ3: Why do packages specify extras?
+### RQ4: Why do packages specify extras?
 
 Mining packages' code repositories or email survey
 
-### RQ4: What problems do developers face when using extras?
+### RQ5: What problems do developers face when using extras?
 
 Analyzing issues in Python projects that mentioned "extras". Issues can be related to specification and adoption. 
 
@@ -58,6 +59,6 @@ Analyzing issues in Python projects that mentioned "extras". Issues can be relat
 ## Method
 
 ### Data Collection
-We need to filter some package, since some package are rarely used by others.
+
 
 https://setuptools.pypa.io/en/latest/userguide/dependency_management.html#optional-dependencies
