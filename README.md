@@ -40,9 +40,12 @@ Hypothesis: packages with more large dependencys are more likely to specify extr
 Hypothesis: packages with less coupled dependency-file relationships are more likely to specify extras   
 dependency-file relationships: extra dependencies are only used in limited files. 
 
-4. Any other possible factors
+4. Familiarization
+Hypothesis: if a package's maintainers published packages specifying extras, then the package are more likely to specify extras. 
 
-5. We may fit a logestic regression model on these factor? 
+5. Any other possible factors
+
+6. We may fit a logestic regression model on these factor? 
 
 ### RQ3: What kinds of extras do packages specify?
 Categorize extras accoding to their names, for example, development extras, alternative backends. 
