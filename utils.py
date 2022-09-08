@@ -3,6 +3,8 @@ from packaging.markers import UndefinedEnvironmentName
 from packaging.requirements import InvalidRequirement, Requirement
 from pymongo import MongoClient
 from tqdm import tqdm
+import re
+from collections import defaultdict
 
 tqdm.pandas()
 
@@ -172,7 +174,77 @@ def package_by_year():
     data.to_csv("data/annual_count.csv", index=False)
 
 
+def extract_extras(requires_dist: list):
+    res = {}
+    for req in requires_dist:
+        if ";" in req:
+            if check_single_spec_extras(req):
+                r = Requirement(req)
+                name, specifier = r.name, r.specifier
+                extras = re.findall(r'extra\s*==\s*[\'"](.*?)[\'"]', str(r.marker))
+                for extra in extras:
+                    res[extra] = res.get(extra, [])
+                    res[extra].append((name, str(specifier)))
+    return res
+
+
+def add_extras():
+    col = db["packages"]
+    df = pd.DataFrame(
+        col.find(
+            {"specify_extra": True},
+            projection={"_id": 0, "name": 1, "version": 1, "requires_dist": 1},
+        )
+    )
+    df["extras_info"] = df["requires_dist"].progress_apply(extract_extras)
+
+    df2 = pd.DataFrame(
+        [
+            [name, version, extra, dep_name, spec]
+            for name, version, extras_info in df[
+                ["name", "version", "extras_info"]
+            ].values
+            for extra, deps in extras_info.items()
+            for dep_name, spec in deps
+        ],
+        columns=["name", "version", "extra", "dependency", "specifier"],
+    )
+
+    db["extras_info"].drop()
+    col2 = db["extras_info"]
+    col2.insert_many(df2.to_dict("records"))
+
+
+def extra_distribution():
+    col = db["extras_info"]
+    df = pd.DataFrame(col.find({}, {"_id": 0}))
+    data = (
+        df.groupby(["name", "version"])
+        .agg({"extra": pd.Series.nunique, "dependency": pd.Series.nunique})
+        .reset_index()
+    )
+    col2 = db["packages"]
+    df2 = pd.DataFrame(
+        col2.find(
+            {"specify_extra": True},
+            projection={"_id": 0, "name": 1, "version": 1, "requires_dist": 1},
+        )
+    )
+    df2["num_deps"] = df2["requires_dist"].apply(len)
+    data = data.merge(df2[["name", "version", "num_deps"]], on=["name", "version"])
+    data = data.rename(
+        columns={
+            "extra": "num_extra",
+            "dependency": "num_extra_deps",
+            "num_deps": "total_deps",
+        }
+    )
+    data.to_csv("data/extra_distribution.csv", index=False)
+
+
 if __name__ == "__main__":
     # simplify_metadata()
-    package_by_year()
+    # package_by_year()
+    # add_extras()
+    # extra_distribution()
     pass
