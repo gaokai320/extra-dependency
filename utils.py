@@ -185,7 +185,7 @@ def extract_extras(requires_dist: list):
                 marker = str(r.marker)
                 marker = marker.split()
                 idx = [i for i, k in enumerate(marker) if k == "extra"]
-                extras = [marker[i + 2] for i in idx]
+                extras = [marker[i + 2].strip("'\"") for i in idx]
                 # extras = re.findall(r'extra\s*==\s*[\'"](.*?)[\'"]', str(r.marker))
                 for extra in extras:
                     res[extra] = res.get(extra, [])
@@ -249,9 +249,26 @@ def extra_distribution():
     data.to_csv("data/extra_distribution.csv", index=False)
 
 
+def extra_dependency_distribution():
+    col = db["extras_info"]
+    df = pd.DataFrame(
+        col.find(
+            {},
+            projection={"_id": 0, "name": 1, "version": 1, "extra": 1, "dependency": 1},
+        )
+    )
+    data = (
+        df.groupby(["name", "version", "extra"])["dependency"]
+        .nunique()
+        .reset_index(name="num_dependency")
+    )
+    data.to_csv("data/extra_dependency_count.csv", index=False)
+
+
 if __name__ == "__main__":
-    simplify_metadata()
-    package_by_year()
-    add_extras()
-    extra_distribution()
+    # simplify_metadata()
+    # package_by_year()
+    # add_extras()
+    # extra_distribution()
+    extra_dependency_distribution()
     pass
