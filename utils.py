@@ -1,10 +1,11 @@
 import pandas as pd
 from packaging.markers import UndefinedEnvironmentName
 from packaging.requirements import InvalidRequirement, Requirement
+from pandarallel import pandarallel
 from pymongo import MongoClient
 from tqdm import tqdm
-import re
-from collections import defaultdict
+
+pandarallel.initialize(progress_bar=True)
 
 tqdm.pandas()
 
@@ -69,12 +70,12 @@ def merge_same_distribution(x):
     else:
         project_urls = project_urls.iloc[0]
 
-    if not x[x["extra"]].empty:
-        tmp = x[x["extra"]].iloc[0]
+    if not x[x["specify_extra"]].empty:
+        tmp = x[x["specify_extra"]].iloc[0]
         requires_dist = tmp["requires_dist"]
         upload_time = tmp["upload_time"]
         size = tmp["size"]
-        extra = tmp["extra"]
+        extra = tmp["specify_extra"]
     else:
         tmp = x[x["requires_dist"].str.len() != 0]
         if tmp.empty:
@@ -84,11 +85,11 @@ def merge_same_distribution(x):
         requires_dist = tmp["requires_dist"]
         upload_time = tmp["upload_time"]
         size = tmp["size"]
-        extra = tmp["extra"]
+        extra = tmp["specify_extra"]
     return pd.Series(
         {
             "requires_dist": requires_dist,
-            "extra": extra,
+            "specify_extra": extra,
             "upload_time": upload_time,
             "size": size,
             "home_page": home_page,
@@ -119,7 +120,7 @@ def simplify_metadata():
     )
     # check whether a distribution' requires_dist specify extras
     # About 1 hour 20 minutes to run
-    df["specify_extra"] = df["requires_dist"].progress_apply(
+    df["specify_extra"] = df["requires_dist"].parallel_apply(
         requires_dist_specify_extras
     )
 
@@ -127,13 +128,13 @@ def simplify_metadata():
     # About a 1 hour 20 minutes to run
     df = (
         df.groupby(["name", "version"])
-        .progress_apply(merge_same_distribution)
+        .parallel_apply(merge_same_distribution)
         .reset_index()
     )
 
     # check whether a distribution' requires_dist use extras
     # About 1 hour to run
-    df["use_extra"] = df["requires_dist"].progress_apply(requires_dist_use_extras)
+    df["use_extra"] = df["requires_dist"].parallel_apply(requires_dist_use_extras)
 
     db["packages"].drop()
     package_col = db["packages"]
@@ -181,7 +182,11 @@ def extract_extras(requires_dist: list):
             if check_single_spec_extras(req):
                 r = Requirement(req)
                 name, specifier = r.name, r.specifier
-                extras = re.findall(r'extra\s*==\s*[\'"](.*?)[\'"]', str(r.marker))
+                marker = str(r.marker)
+                marker = marker.split()
+                idx = [i for i, k in enumerate(marker) if k == "extra"]
+                extras = [marker[i + 2] for i in idx]
+                # extras = re.findall(r'extra\s*==\s*[\'"](.*?)[\'"]', str(r.marker))
                 for extra in extras:
                     res[extra] = res.get(extra, [])
                     res[extra].append((name, str(specifier)))
@@ -196,7 +201,7 @@ def add_extras():
             projection={"_id": 0, "name": 1, "version": 1, "requires_dist": 1},
         )
     )
-    df["extras_info"] = df["requires_dist"].progress_apply(extract_extras)
+    df["extras_info"] = df["requires_dist"].parallel_apply(extract_extras)
 
     df2 = pd.DataFrame(
         [
@@ -230,7 +235,9 @@ def extra_distribution():
             projection={"_id": 0, "name": 1, "version": 1, "requires_dist": 1},
         )
     )
-    df2["num_deps"] = df2["requires_dist"].apply(len)
+    df2["num_deps"] = df2["requires_dist"].parallel_apply(
+        lambda x: len(set([Requirement(r).name for r in x]))
+    )
     data = data.merge(df2[["name", "version", "num_deps"]], on=["name", "version"])
     data = data.rename(
         columns={
@@ -243,8 +250,8 @@ def extra_distribution():
 
 
 if __name__ == "__main__":
-    # simplify_metadata()
-    # package_by_year()
-    # add_extras()
-    # extra_distribution()
+    simplify_metadata()
+    package_by_year()
+    add_extras()
+    extra_distribution()
     pass
