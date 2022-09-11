@@ -264,6 +264,9 @@ def extra_dependency_distribution():
     )
     data.to_csv("data/extra_dependency_count.csv", index=False)
 
+    data2 = df[["name", "version", "dependency"]].drop_duplicates()
+    data2.to_csv("data/extra_dependency.csv", index=False)
+
 
 if __name__ == "__main__":
     # simplify_metadata()
