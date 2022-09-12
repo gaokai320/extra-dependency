@@ -1,4 +1,4 @@
-# A first look at extras in PyPI ecosystem
+# A first look at extras in PyPI packages
 
 Reusing third-party packages has long been a common practice in software development. However, too many dependencies may lead to various problems, e.g., dependency conflicts, security issues, and large installation size. To help developers better manage dependencies, Python provides an `extra` mechanism to customize dependencies required for installation. 
 
